@@ -1,0 +1,26 @@
+# Configurazione Maximum Flow Tabu Search
+
+# Parametri Tabu Search
+tabu_search:
+  max_iterations: 20000
+  tabu_list_size: 10
+  aspiration_enabled: true
+  delta_step: 1
+  
+# Esperimenti
+experiments:
+  num_runs: 10
+  random_seeds: [42, 123, 456, 789, 101, 202, 303, 404, 505, 606]
+  
+# Visualizzazione
+visualization:
+  theme: "dark"           # "dark" o "light"
+  save_plots: true
+  show_plots: false
+  plot_format: "png"
+  figsize: [12, 8]
+  
+# Output
+output:
+  save_results: true
+  verbose: true
