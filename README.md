@@ -10,17 +10,35 @@ Risolvere il problema del massimo flusso utilizzando una metaeuristica Tabu Sear
 
 ```
 max_flow_tabu/
-├── src/
-│   ├── data/           # Gestione input e strutture dati
-│   ├── algorithms/     # Implementazione Tabu Search
-│   ├── visualization/  # Grafici e plotting
-│   └── utils/         # Configurazione e utilità
-├── data/
-│   ├── networks/      # File network di input
-│   └── results/       # Risultati esperimenti
-├── config.yaml       # Configurazione parametri
-├── main.py           # Script principale
-└── run_experiments.py # Batch experiments
+├── config.yaml
+├── data
+│   ├── networks
+│   │   ├── network_11520.txt
+│   │   ├── network_1440.txt
+│   │   ├── network_160.txt
+│   │   ├── network_23040.txt
+│   │   ├── network_2880.txt
+│   │   ├── network_4320.txt
+│   │   ├── network_500.txt
+│   │   ├── network_5760.txt
+│   │   ├── network_7200.txt
+│   │   └── network_960.txt
+│   └── results
+├── main.py
+├── README.md
+├── requirements.txt
+├── run_experiments.py
+└── src
+    ├── __init__.py
+    ├── algorithms
+    │   ├── __init__.py
+    │   └── tabu_search.py
+    ├── data
+    │   ├── __init__.py
+    │   └── network_reader.py
+    └── visualization
+        ├── __init__.py
+        └── plotter.py
 ```
 
 ## 🚀 Quick Start
