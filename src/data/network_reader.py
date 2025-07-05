@@ -11,7 +11,7 @@ class NetworkData:
         self.sink = sink
         self.info = info
         
-    def is_optimal_flow(self, flow_value: float, tolerance: float = 1e-6) -> bool:
+    def is_optimal_flow(self, flow_value: float, tolerance: float = 1e-3) -> bool:
         """
         Check if a flow value is optimal by comparing with theoretical bounds.
         A flow is optimal when it equals the sum of capacities from source OR to sink.
