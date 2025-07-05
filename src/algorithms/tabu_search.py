@@ -694,7 +694,6 @@ class TabuSearch:
         STOPPING CRITERIA come specificato dal progetto + arresto intelligente:
         1. Raggiunto max_iterations (2×10^4)
         2. Raggiunto il massimo flusso (verifica di ottimalità)
-        3. Stagnazione prolungata vicino all'ottimo (criterio pratico)
         """
         # Criterio 1: Max iterazioni raggiunto
         if self.iteration >= self.max_iterations:
