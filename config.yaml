@@ -1,11 +1,6 @@
 tabu_search:
   max_iterations: 20000
-  tabu_list_size: 100
-  aspiration_enabled: true
-  delta_step: 1.0
-  intensification_threshold: 50
-  diversification_threshold: 100
-  elite_size: 5
+  tabu_list_size: 20
 
 experiments:
   num_runs: 10
@@ -14,8 +9,9 @@ experiments:
 output:
   save_results: true
   results_directory: "data/results"
+  show_worker_logs_in_parallel: False
 
 visualization:
   save_plots: true
+  style: "light" # options are 'light' or 'black'
   plot_formats: ["png"]
-  dpi: 150

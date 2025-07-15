@@ -1,246 +1,168 @@
+# main.py
 import os
-import sys
-import json
 import time
 import yaml
-import statistics
 import argparse
-import multiprocessing as mp
-from concurrent.futures import ProcessPoolExecutor
+import numpy as np
+import pandas as pd
+import multiprocessing
+from functools import partial
+import logging
 
-sys.path.append('src')
+from src.data.network_reader import read_network, compute_reference_max_flow
+from src.algorithms.tabu_search import TabuSearch
+from src.visualization.plotter import plot_all_runs_convergence, plot_best_run_convergence
+from src.utils.logging_utils import setup_queue_logging, setup_main_logger
 
-from src.data.network_reader import *
-from src.algorithms.tabu_search import *
-from src.visualization.plotter import *
-
-
-def load_config(config_path: str = "config.yaml") -> dict:
-    try:
-        with open(config_path, 'r') as file:
-            return yaml.safe_load(file)
-    except Exception as e:
-        raise Exception(f"Error loading config from {config_path}: {e}")
-
-
-def run_single_experiment(network_data, config: dict, run_id: int) -> dict:
-    # Generate diverse seeds to avoid deterministic behavior
-    base_seeds = config['experiments']['random_seeds']
-    base_seed = base_seeds[run_id % len(base_seeds)]
+# *** CORREZIONE: Assicurati che la firma di questa funzione includa 'show_logs: bool' ***
+def run_single_trial(run_id: int, log_queue, network_data: 'NetworkData', config: dict, show_logs: bool) -> dict:
+    """
+    Funzione da eseguire in ogni processo parallelo.
+    """
+    setup_queue_logging(log_queue)
+    logger = logging.getLogger()
     
-    # Add time-based randomization to create truly different runs
-    import time
-    diverse_seed = base_seed + run_id * 1000 + int(time.time() * 1000) % 10000
-    
-    random.seed(diverse_seed)
-    import numpy as np
-    np.random.seed(diverse_seed)
-    
-    tabu_search = TabuSearch(
-        graph=network_data.graph,
-        source=network_data.source,
-        sink=network_data.sink,
-        config_path="config.yaml"
-    )
+    seed = config['experiments']['random_seeds'][run_id - 1]
     
     start_time = time.time()
-    best_flow_dict, best_value, convergence_history = tabu_search.solve()
-    execution_time = time.time() - start_time
+    # Passa 'show_logs' al costruttore di TabuSearch
+    ts_solver = TabuSearch(network_data, config, seed, run_id, logger, show_logs)
+    result = ts_solver.run()
+    end_time = time.time()
     
-    is_valid, flow_value, errors = validate_flow(network_data, best_flow_dict)
-    is_optimal = network_data.is_optimal_flow(flow_value)
-    
-    iterations_to_best = len(convergence_history)
-    if convergence_history:
-        for i, value in enumerate(convergence_history):
-            if abs(value - best_value) < 1e-9:
-                iterations_to_best = i + 1
-                break
-    
-    result = {
-        'run_id': run_id,
-        'seed': diverse_seed,
-        'best_value': flow_value,
-        'is_valid': is_valid,
-        'is_optimal': is_optimal,
-        'execution_time': execution_time,
-        'iterations_to_best': iterations_to_best,
-        'total_iterations': tabu_search.iteration,
-        'function_evaluations': tabu_search.get_function_evaluations(),
-        'convergence_history': convergence_history
-    }
-    
+    result['execution_time'] = end_time - start_time
     return result
 
+def process_results(run_results: list, total_execution_time: float, network_data: 'NetworkData', config: dict):
+    """
+    Prende i risultati raccolti e genera le tabelle di riepilogo e i grafici finali.
+    """
+    instance_name = network_data.info['filename'].replace('.txt', '')
+    output_dir = os.path.join(config['output']['results_directory'], instance_name)
+    reference_flow = compute_reference_max_flow(network_data)
+    run_stats = []
+    for res in sorted(run_results, key=lambda x: x['run_id']):
+        run_stats.append({
+            "Run": res["run_id"], "Best Flow": res["best_flow"],
+            "Iterations to Best": res["iteration_of_best"], "Evaluations to Best": res["evaluations_to_best"],
+            "Execution Time (s)": res["execution_time"], "Is Optimal": abs(res["best_flow"] - reference_flow) < 1e-3
+        })
+    run_stats_df = pd.DataFrame(run_stats)
+    best_flows = run_stats_df["Best Flow"].values
+    num_optimal = run_stats_df["Is Optimal"].sum()
+    num_runs = len(run_results)
+    summary_stats = {
+        "best_flow_found": np.max(best_flows), "mean_flow": np.mean(best_flows),
+        "std_dev_flow": np.std(best_flows), "mean_iterations_to_best": run_stats_df["Iterations to Best"].mean(),
+        "mean_evaluations_to_best": run_stats_df["Evaluations to Best"].mean(),
+        "success_rate_perc": (num_optimal / num_runs) * 100,
+        "mean_execution_time": run_stats_df["Execution Time (s)"].mean(),
+        "total_execution_time": total_execution_time
+    }
 
-def run_single_experiment_worker(args) -> dict:
-    """Worker function for parallel execution"""
-    network_data, config, run_id = args
-    return run_single_experiment(network_data, config, run_id)
+    # Genera le stringhe di riepilogo finale
+    summary_log = "\n" + "="*80 + "\n--- Aggregated Performance Summary ---\n" + "="*80 + "\n"
+    summary_log += f"  1. Best flow found (across all runs):   {summary_stats['best_flow_found']:.6f}\n"
+    summary_log += f"  2. Mean of best flows found:             {summary_stats['mean_flow']:.6f}\n"
+    summary_log += f"  3. Standard deviation of best flows:     {summary_stats['std_dev_flow']:.6f}\n"
+    summary_log += f"  4. Mean iterations to find best solution:{summary_stats['mean_iterations_to_best']:.2f}\n"
+    summary_log += f"  5. Mean evaluations to find best solution:{summary_stats['mean_evaluations_to_best']:.2f}\n"
+    summary_log += f"  6. Success Rate (reaching optimum):      {summary_stats['success_rate_perc']:.1f}% ({num_optimal}/{num_runs})\n"
+    summary_log += f"  Mean execution time per run:             {summary_stats['mean_execution_time']:.4f} seconds\n"
+    summary_log += f"  Total execution time for {num_runs} runs:    {summary_stats['total_execution_time']:.4f} seconds\n"
+    summary_log += "\n" + "="*80 + "\n--- Detailed Run-by-Run Statistics ---\n" + "="*80 + "\n"
+    summary_log += run_stats_df.to_string(index=False)
+    
+    logging.info(summary_log)
+    
+    if config['visualization']['save_plots']:
+        plot_style = config['visualization'].get('style', 'light')
+        logging.info("\n" + "="*80 + f"\n--- Generating Plots (Style: {plot_style}) ---\n" + "="*80)
+        all_histories = [res['history'] for res in sorted(run_results, key=lambda x: x['run_id'])]
+        best_run_index = np.argmax(best_flows)
+        best_history = run_results[best_run_index]['history']
+        p1_path = plot_all_runs_convergence(all_histories, instance_name, output_dir, style=plot_style, summary_stats=summary_stats)
+        logging.info(f"  -> Saved all runs convergence plot to: {p1_path}")
+        p2_path = plot_best_run_convergence(best_history, instance_name, output_dir, style=plot_style)
+        logging.info(f"  -> Saved best run convergence plot to: {p2_path}")
 
+def run_experiment_for_instance(network_path: str, config: dict, parallel: bool):
+    instance_name = os.path.basename(network_path).replace('.txt', '')
+    output_dir = os.path.join(config['output']['results_directory'], instance_name)
+    
+    with multiprocessing.Manager() as manager:
+        log_queue = manager.Queue()
 
-def run_parallel_experiments(network_data, config: dict) -> list:
-    """Run experiments in parallel using multiple CPU cores"""
-    num_runs = config['experiments']['num_runs']
-    max_workers = min(num_runs, mp.cpu_count())
-    
-    print(f"Running {num_runs} experiments in parallel using {max_workers} CPU core(s)")
-    
-    # Prepare arguments for parallel execution
-    args_list = [(network_data, config, run_id) for run_id in range(num_runs)]
-    
-    # Execute in parallel
-    with ProcessPoolExecutor(max_workers=max_workers) as executor:
-        results = list(executor.map(run_single_experiment_worker, args_list))
-    
-    return results
+        listener = setup_main_logger(output_dir, instance_name, log_queue)
+        listener.start()
+        
+        main_logger = logging.getLogger()
 
+        main_logger.info("="*60)
+        main_logger.info(f"--- STARTING EXPERIMENT FOR INSTANCE: {instance_name} ---")
+        show_worker_logs = config['output'].get('show_worker_logs_in_parallel', True)
+        if parallel and not show_worker_logs:
+             main_logger.info("--- Execution Mode: PARALLEL (Worker logs are hidden) ---")
+        else:
+             main_logger.info(f"--- Execution Mode: {'PARALLEL' if parallel else 'SEQUENTIAL'} ---")
+        main_logger.info("="*60)
 
-def run_sequential_experiments(network_data, config: dict) -> list:
-    """Run experiments sequentially"""
-    num_runs = config['experiments']['num_runs']
-    run_results = []
-    
-    print(f"Running {num_runs} experiments sequentially...")
-    
-    for run_id in range(num_runs):
-        try:
-            print(f"Run {run_id + 1:2d}/{num_runs}: ", end="", flush=True)
-            
-            result = run_single_experiment(network_data, config, run_id)
-            run_results.append(result)
-            
-            flow_val = result['best_value']
-            exec_time = result['execution_time']
-            iterations = result['total_iterations']
-            optimal = "OPT" if result['is_optimal'] else "SUB"
-            
-            print(f"flow={flow_val:.2f} {optimal} iter={iterations} ({exec_time:.1f}s)")
-            
-        except Exception as e:
-            print(f"FAILED: {e}")
-            run_results.append({
-                'run_id': run_id,
-                'error': str(e),
-                'best_value': 0.0,
-                'is_valid': False
-            })
-    
-    return run_results
+        network_data = read_network(network_path)
+        
+        total_start_time = time.time()
+        num_runs = config['experiments']['num_runs']
+        
+        run_results = []
+        
+        if parallel:
+            worker_func = partial(run_single_trial, 
+                                  log_queue=log_queue, 
+                                  network_data=network_data, 
+                                  config=config,
+                                  show_logs=show_worker_logs) # Questa riga passa l'argomento
+            with multiprocessing.Pool() as pool:
+                run_results = pool.map(worker_func, range(1, num_runs + 1))
+        else:
+            for i in range(1, num_runs + 1):
+                run_id = i
+                seed = config['experiments']['random_seeds'][run_id - 1]
+                start_time = time.time()
+                ts_solver = TabuSearch(network_data, config, seed, run_id, main_logger, show_logs=True)
+                result = ts_solver.run()
+                end_time = time.time()
+                result['execution_time'] = end_time - start_time
+                run_results.append(result)
 
-
-def create_plots(results: dict, network_number: str, config: dict):
-    if not config['visualization']['save_plots']:
-        return
-    
-    valid_results = [r for r in results['run_results'] if r.get('is_valid', False)]
-    if not valid_results:
-        print("No valid results to plot.")
-        return
-    
-    output_dir = f"data/results/network_{network_number}"
-    os.makedirs(output_dir, exist_ok=True)
-    
-    plot_best_run_convergence(results, network_number, output_dir)
-
+        total_end_time = time.time()
+        total_execution_time = total_end_time - total_start_time
+        
+        process_results(run_results, total_execution_time, network_data, config)
+        
+        main_logger.info(f"\n--- Experiment for {instance_name} Complete ---")
+        
+        listener.stop()
 
 def main():
-    parser = argparse.ArgumentParser(description='Classic Tabu Search for Maximum Flow Problem')
-    parser.add_argument('--network', type=str, required=True, 
-                       help='Network file to process')
-    parser.add_argument('--config', type=str, default='config.yaml',
-                       help='Configuration file path')
-    parser.add_argument('--parallel', action='store_true',
-                       help='Use parallel execution')
+    parser = argparse.ArgumentParser(description="Run Tabu Search Experiments")
+    parser.add_argument('--network', type=str, help='Path to a specific network file.')
+    parser.add_argument('--all', action='store_true', help='Run for all networks.')
+    parser.add_argument('--parallel', action='store_true', help='Enable parallel execution of runs.')
+    parser.add_argument('--config', type=str, default='config.yaml', help='Path to config file.')
     args = parser.parse_args()
-    
-    try:
-        config = load_config(args.config)
-        print(f"Configuration loaded")
-        print(f"Runs per experiment: {config['experiments']['num_runs']}")
-        
-    except Exception as e:
-        print(f"Error loading configuration: {e}")
-        return
-    
-    if not os.path.exists(args.network):
-        print(f"Error: Network file {args.network} not found")
-        return
-    
-    print(f"Processing network: {args.network}")
-    
-    try:
-        network_data = read_network(args.network, verbose=True)
-    except Exception as e:
-        print(f"Error loading network: {e}")
-        return
-    
-    # Choose execution mode
-    if args.parallel:
-        run_results = run_parallel_experiments(network_data, config)
+
+    with open(args.config, 'r') as f: config = yaml.safe_load(f)
+
+    if args.network:
+        run_experiment_for_instance(args.network, config, args.parallel)
+    elif args.all:
+        network_dir = 'data/networks'
+        network_files = sorted([f for f in os.listdir(network_dir) if f.endswith(".txt")])
+        for filename in network_files:
+            network_path = os.path.join(network_dir, filename)
+            run_experiment_for_instance(network_path, config, args.parallel)
     else:
-        run_results = run_sequential_experiments(network_data, config)
-    
-    valid_results = [r for r in run_results if r.get('is_valid', False)]
-    
-    if not valid_results:
-        print("No valid results obtained")
-        return
-    
-    best_values = [r['best_value'] for r in valid_results]
-    iterations_to_best = [r['iterations_to_best'] for r in valid_results]
-    execution_times = [r['execution_time'] for r in valid_results]
-    
-    aggregate_stats = {
-        'best': max(best_values),
-        'mean': statistics.mean(best_values),
-        'std_dev': statistics.stdev(best_values) if len(best_values) > 1 else 0.0,
-        'mean_iterations_to_best': statistics.mean(iterations_to_best),
-        'mean_execution_time': statistics.mean(execution_times),
-        'optimal_runs': sum(1 for r in valid_results if r.get('is_optimal', False))
-    }
-    
-    theoretical_max = network_data.get_max_possible_flow()
-
-    network_number = os.path.basename(args.network).replace('network_', '').replace('.txt', '')
-    output_dir = f"data/results/network_{network_number}"
-    os.makedirs(output_dir, exist_ok=True)
-    
-    results = {
-        'network_file': args.network,
-        'network_info': network_data.info,
-        'run_results': run_results,
-        'aggregate_stats': aggregate_stats,
-        'theoretical_max': theoretical_max,
-        'parallel_execution': args.parallel
-    }
-    
-    if config['output']['save_results']:
-        clean_results = results.copy()
-        for run_result in clean_results.get('run_results', []):
-            if 'final_flow' in run_result:
-                del run_result['final_flow']
-        
-        filename = f"results_network_{network_number}.json"
-        filepath = os.path.join(output_dir, filename)
-        
-        with open(filepath, 'w') as f:
-            json.dump(clean_results, f, indent=2)
-        
-        print(f"Results saved to {filepath}")
-    
-    print(f"\nRESULTS SUMMARY")
-    print("-" * 40)
-    print(f"Best: {aggregate_stats['best']:.4f}")
-    print(f"Mean: {aggregate_stats['mean']:.4f}")
-    print(f"StdDev: {aggregate_stats['std_dev']:.4f}")
-    print(f"Optimal: {aggregate_stats['optimal_runs']}/{len(valid_results)}")
-    print(f"AvgTime: {aggregate_stats['mean_execution_time']:.1f}s")
-    print(f"AvgIter: {aggregate_stats['mean_iterations_to_best']:.0f}")
-    print("-" * 40)
-    
-    create_plots(results, network_number, config)
-
+        print("Error: Please specify a network file with --network <path> or use --all.")
 
 if __name__ == "__main__":
+    multiprocessing.freeze_support()
     main()
