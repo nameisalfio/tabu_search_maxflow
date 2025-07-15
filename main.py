@@ -1,5 +1,6 @@
 # main.py
 import os
+import re
 import time
 import yaml
 import argparse
@@ -156,10 +157,25 @@ def main():
         run_experiment_for_instance(args.network, config, args.parallel)
     elif args.all:
         network_dir = 'data/networks'
-        network_files = sorted([f for f in os.listdir(network_dir) if f.endswith(".txt")])
-        for filename in network_files:
+        
+        def get_number_from_filename(filename):
+            match = re.search(r'(\d+)', filename)
+            return int(match.group(1)) if match else 0
+
+        network_files = [f for f in os.listdir(network_dir) if f.endswith(".txt")]
+        sorted_files = sorted(network_files, key=get_number_from_filename)
+        
+        print("\n" + "="*70)
+        print("Processing networks in numerical order based on filename:")
+        print("="*70)
+
+        for filename in sorted_files:
             network_path = os.path.join(network_dir, filename)
+            print(f"\n>>> Processing: {filename}")
             run_experiment_for_instance(network_path, config, args.parallel)
+            print("-" * 70)
+
+        print("\nAll experiments are complete.")
     else:
         print("Error: Please specify a network file with --network <path> or use --all.")
 

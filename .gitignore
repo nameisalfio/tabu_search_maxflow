@@ -18,7 +18,6 @@ env/
 *.swo
 
 # Results and logs
-data/results/*
 !data/results/.gitkeep
 *.log
 logs/
