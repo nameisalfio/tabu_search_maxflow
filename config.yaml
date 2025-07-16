@@ -25,16 +25,6 @@ frequency:
   # Higher values = more penalty for repeated moves
   alpha: 0.01
 
-# Path relinking between elite solutions
-path_relinking:
-  enabled: true
-  # Iteration interval to check for path relinking
-  frequency: 50
-  # Probability to perform path relinking when checked
-  probability: 0.3
-  # Max steps per path relinking session
-  max_steps: 10
-
 output:
   results_directory: 'data/results'
   show_worker_logs_in_parallel: false

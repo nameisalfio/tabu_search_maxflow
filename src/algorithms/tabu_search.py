@@ -48,22 +48,12 @@ class TabuSearch:
         self.alpha = self.frequency_config.get('alpha', 0.01)
         self.enable_frequency_memory = self.frequency_config.get('enabled', True)
         
-        # 2. Path relinking
-        self.path_relinking_config = config.get('path_relinking', {})
-        self.enable_path_relinking = self.path_relinking_config.get('enabled', True)
-        self.path_relinking_frequency = self.path_relinking_config.get('frequency', 50)
-        self.path_relinking_prob = self.path_relinking_config.get('probability', 0.3)
-        self.path_relinking_max_steps = self.path_relinking_config.get('max_steps', 10)
-        
         self.frequency_penalties_applied = 0
-        self.path_relinking_executions = 0
-        self.best_solutions_from_path_relinking = 0
         self.total_moves_evaluated = 0
         
         if self.show_logs:
             self.logger.info(f"      [Run {self.run_id:02d}] Enhanced Tabu Search initialized")
             self.logger.info(f"      [Run {self.run_id:02d}] Frequency memory: {self.enable_frequency_memory} (alpha={self.alpha})")
-            self.logger.info(f"      [Run {self.run_id:02d}] Path relinking: {self.enable_path_relinking} (freq={self.path_relinking_frequency})")
 
     def _find_augmenting_path(self) -> Optional[Tuple[List[int], float]]:
         """Find augmenting path from source to sink using BFS"""
@@ -194,89 +184,6 @@ class TabuSearch:
         selected_move = self.random.choice(all_moves)
         return selected_move
     
-    def _apply_path_relinking_move(self, move: Tuple[int, int], 
-                                   target_dict: Dict[Tuple[int, int], float]):
-        """Apply a path relinking move"""
-        u, v = move
-        
-        if (u, v) in target_dict and target_dict[(u, v)] > 1e-9:
-            current_flow = self.current_flow_dict.get((u, v), 0.0)
-            capacity = self.graph[u][v]['capacity']
-            target_flow = target_dict[(u, v)]
-            
-            flow_to_add = min(capacity - current_flow, target_flow - current_flow)
-            
-            if flow_to_add > 1e-9:
-                self.current_flow_dict[(u, v)] += flow_to_add
-                self.current_flow_value += flow_to_add
-        
-        elif (u, v) in self.current_flow_dict and self.current_flow_dict[(u, v)] > 1e-9:
-            current_flow = self.current_flow_dict[(u, v)]
-            flow_to_remove = current_flow * 0.5  
-            
-            self.current_flow_dict[(u, v)] -= flow_to_remove
-            self.current_flow_value -= flow_to_remove
-    
-    def _path_relink(self, source_dict: Dict[Tuple[int, int], float], 
-                     target_dict: Dict[Tuple[int, int], float]) -> Tuple[float, Dict[Tuple[int, int], float]]:
-        """Execute path relinking between two solutions"""
-        best_value = self.current_flow_value
-        best_dict = copy.deepcopy(self.current_flow_dict)
-        
-        original_flow_dict = copy.deepcopy(self.current_flow_dict)
-        original_flow_value = self.current_flow_value
-        
-        self.current_flow_dict = copy.deepcopy(source_dict)
-        self.current_flow_value = sum(self.current_flow_dict.values())
-        
-        for step in range(self.path_relinking_max_steps):
-            move = self._find_move_towards_target(self.current_flow_dict, target_dict)
-            
-            if move is None:
-                break
-            
-            self._apply_path_relinking_move(move, target_dict)
-            
-            if self.current_flow_value > best_value:
-                best_value = self.current_flow_value
-                best_dict = copy.deepcopy(self.current_flow_dict)
-            
-            if self._calculate_solution_distance(self.current_flow_dict, target_dict) == 0:
-                break
-        
-        self.current_flow_dict = original_flow_dict
-        self.current_flow_value = original_flow_value
-        
-        return best_value, best_dict
-    
-    def _perform_path_relinking(self, iteration: int) -> bool:
-        """Perform path relinking if conditions are met"""
-        if not self.enable_path_relinking:
-            return False
-        
-        if iteration % self.path_relinking_frequency == 0 and self.random.random() < self.path_relinking_prob:
-            if len(self.elite_solutions) >= 2:
-                self.path_relinking_executions += 1
-                
-                _, elite1_dict = self.random.choice(self.elite_solutions)
-                _, elite2_dict = self.random.choice(self.elite_solutions)
-                
-                if elite1_dict != elite2_dict:
-                    best_value, best_dict = self._path_relink(elite1_dict, elite2_dict)
-                    
-                    if best_value > self.best_flow_value:
-                        self.best_flow_value = best_value
-                        self.best_flow_dict = copy.deepcopy(best_dict)
-                        self.best_solutions_from_path_relinking += 1
-                        
-                        if self.show_logs:
-                            self.logger.info(f"      [Run {self.run_id:02d}][Iter {iteration:05d}] PATH RELINKING new best: {best_value:.6f}")
-                        
-                        return True
-        
-        return False
-
-    
     def run(self):
         """Main enhanced tabu search algorithm"""
         if self.show_logs: 
@@ -302,15 +209,8 @@ class TabuSearch:
                     'max_iter': max_iterations, 
                     'flow': self.best_flow_value,
                     'freq_penalties': self.frequency_penalties_applied,
-                    'path_relinking_execs': self.path_relinking_executions,
                     'moves_evaluated': self.total_moves_evaluated
                 }
-
-            if self._perform_path_relinking(i):
-                self.stagnation_counter = 0
-                self.iteration_of_best = i
-                self.evaluations_to_best = num_evaluations
-                self._update_elite_solutions(self.best_flow_value, self.best_flow_dict)
 
             move = self._find_augmenting_path()
             num_evaluations += 1
@@ -361,8 +261,6 @@ class TabuSearch:
             self.logger.info(f"    --- Finished Enhanced Run {self.run_id:02d}. Final Best Flow: {self.best_flow_value:.6f} ---")
             self.logger.info(f"    --- Enhanced Statistics ---")
             self.logger.info(f"    --- Frequency penalties applied: {self.frequency_penalties_applied} ---")
-            self.logger.info(f"    --- Path relinking executions: {self.path_relinking_executions} ---")
-            self.logger.info(f"    --- Best solutions from path relinking: {self.best_solutions_from_path_relinking} ---")
             self.logger.info(f"    --- Total moves evaluated: {self.total_moves_evaluated} ---\n")
         
         return {
@@ -372,8 +270,6 @@ class TabuSearch:
             "evaluations_to_best": self.evaluations_to_best, 
             "history": self.history,
             "frequency_penalties_applied": self.frequency_penalties_applied,
-            "path_relinking_executions": self.path_relinking_executions,
-            "best_solutions_from_path_relinking": self.best_solutions_from_path_relinking,
             "total_moves_evaluated": self.total_moves_evaluated,
             "frequency_memory_size": len(self.frequency_memory),
             "elite_solutions_count": len(self.elite_solutions)
