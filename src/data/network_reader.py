@@ -1,5 +1,5 @@
 import os
-import networkx as nx # type: ignore
+import networkx as nx 
 from typing import Dict, Any
 
 class NetworkData:

@@ -16,7 +16,7 @@ from src.utils.logging_utils import setup_queue_logging, setup_main_logger
 
 def run_single_trial(run_id: int, log_queue, network_data: 'NetworkData', config: dict, show_logs: bool) -> dict:
     """
-    Funzione da eseguire in ogni processo parallelo.
+    Function to execute in each parallel process.
     """
     setup_queue_logging(log_queue)
     logger = logging.getLogger()
@@ -33,7 +33,7 @@ def run_single_trial(run_id: int, log_queue, network_data: 'NetworkData', config
 
 def process_results(run_results: list, total_execution_time: float, network_data: 'NetworkData', config: dict):
     """
-    Prende i risultati raccolti e genera le tabelle di riepilogo e i grafici finali.
+    Takes the collected results and generates summary tables and final plots.
     """
     instance_name = network_data.info['filename'].replace('.txt', '')
     output_dir = os.path.join(config['output']['results_directory'], instance_name)

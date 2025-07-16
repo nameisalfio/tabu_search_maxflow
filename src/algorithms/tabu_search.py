@@ -6,13 +6,6 @@ from typing import Tuple, List, Optional, Dict, Set
 from src.data.network_reader import NetworkData
 
 class TabuSearch:
-    """
-    Enhanced Tabu Search implementation for Maximum Flow Problem with:
-    1. Long-term frequency memory
-    2. Path relinking strategy
-    3. Intensification and diversification mechanisms
-    4. Elite solutions management
-    """
     
     def __init__(self, network_data: NetworkData, config: dict, seed: int, run_id: int, 
                  logger: logging.Logger, show_logs: bool = True, progress_dict=None):
@@ -42,16 +35,13 @@ class TabuSearch:
         self.evaluations_to_best = 0
         self.history = []
 
-        # Traditional tabu search components
         self.strategies_config = config.get('strategies', {})
         self.stagnation_counter = 0
         self.tabu_list = deque(maxlen=config['tabu_search']['tabu_list_size'])
         self.elite_solutions = []
         self.intensify_config = self.strategies_config.get('intensification', {})
         self.diversify_config = self.strategies_config.get('diversification', {})
-        
-        # ========== ENHANCED FEATURES ==========
-        
+            
         # 1. Long-term frequency memory
         self.frequency_config = config.get('frequency', {})
         self.frequency_memory = defaultdict(int)
@@ -65,7 +55,6 @@ class TabuSearch:
         self.path_relinking_prob = self.path_relinking_config.get('probability', 0.3)
         self.path_relinking_max_steps = self.path_relinking_config.get('max_steps', 10)
         
-        # Statistics for analysis
         self.frequency_penalties_applied = 0
         self.path_relinking_executions = 0
         self.best_solutions_from_path_relinking = 0
@@ -142,8 +131,6 @@ class TabuSearch:
         self.current_flow_dict = {edge: 0.0 for edge in self.graph.edges}
         self.current_flow_value = 0.0
         self.tabu_list.clear()
-
-    # ========== FREQUENCY MEMORY FUNCTIONS ==========
     
     def _update_frequency_memory(self, move: Tuple[int, int]):
         """Update frequency memory for the given move"""
@@ -167,25 +154,18 @@ class TabuSearch:
         """Evaluate a move considering frequency penalty"""
         path, flow_to_push = move
         bottleneck_edge = self._get_bottleneck_edge(path, flow_to_push)
-        
-        # Base move value (flow improvement)
+
         base_value = flow_to_push
-        
-        # Frequency penalty
         frequency_penalty = self._get_frequency_penalty(bottleneck_edge)
-        
-        # Final value (higher is better, so subtract penalty)
         final_value = base_value - frequency_penalty
         
         self.total_moves_evaluated += 1
         
         return final_value
 
-    # ========== PATH RELINKING FUNCTIONS ==========
     
     def _solution_to_signature(self, flow_dict: Dict[Tuple[int, int], float]) -> frozenset:
         """Convert solution to signature for comparison"""
-        # Consider only edges with positive flow
         active_edges = frozenset((u, v) for (u, v), flow in flow_dict.items() if flow > 1e-9)
         return active_edges
     
@@ -195,7 +175,6 @@ class TabuSearch:
         source_sig = self._solution_to_signature(source_dict)
         target_sig = self._solution_to_signature(target_dict)
         
-        # Hamming distance: number of different edges
         distance = len(source_sig.symmetric_difference(target_sig))
         return distance
     
@@ -205,19 +184,13 @@ class TabuSearch:
         source_sig = self._solution_to_signature(source_dict)
         target_sig = self._solution_to_signature(target_dict)
         
-        # Find edges to activate (in target but not in source)
         edges_to_activate = target_sig - source_sig
-        
-        # Find edges to deactivate (in source but not in target)
         edges_to_deactivate = source_sig - target_sig
-        
-        # Choose randomly between activation and deactivation
         all_moves = list(edges_to_activate) + list(edges_to_deactivate)
         
         if not all_moves:
             return None
             
-        # Select a random move
         selected_move = self.random.choice(all_moves)
         return selected_move
     
@@ -226,25 +199,20 @@ class TabuSearch:
         """Apply a path relinking move"""
         u, v = move
         
-        # If edge should be activated
         if (u, v) in target_dict and target_dict[(u, v)] > 1e-9:
-            # Try to increase flow on this edge
             current_flow = self.current_flow_dict.get((u, v), 0.0)
             capacity = self.graph[u][v]['capacity']
             target_flow = target_dict[(u, v)]
             
-            # Calculate how much flow we can add
             flow_to_add = min(capacity - current_flow, target_flow - current_flow)
             
             if flow_to_add > 1e-9:
                 self.current_flow_dict[(u, v)] += flow_to_add
                 self.current_flow_value += flow_to_add
         
-        # If edge should be deactivated
         elif (u, v) in self.current_flow_dict and self.current_flow_dict[(u, v)] > 1e-9:
-            # Reduce flow on this edge
             current_flow = self.current_flow_dict[(u, v)]
-            flow_to_remove = current_flow * 0.5  # Remove half the flow
+            flow_to_remove = current_flow * 0.5  
             
             self.current_flow_dict[(u, v)] -= flow_to_remove
             self.current_flow_value -= flow_to_remove
@@ -255,34 +223,27 @@ class TabuSearch:
         best_value = self.current_flow_value
         best_dict = copy.deepcopy(self.current_flow_dict)
         
-        # Save current state
         original_flow_dict = copy.deepcopy(self.current_flow_dict)
         original_flow_value = self.current_flow_value
         
-        # Start from source solution
         self.current_flow_dict = copy.deepcopy(source_dict)
         self.current_flow_value = sum(self.current_flow_dict.values())
         
         for step in range(self.path_relinking_max_steps):
-            # Find move towards target
             move = self._find_move_towards_target(self.current_flow_dict, target_dict)
             
             if move is None:
                 break
             
-            # Apply the move
             self._apply_path_relinking_move(move, target_dict)
             
-            # Check if we found a better solution
             if self.current_flow_value > best_value:
                 best_value = self.current_flow_value
                 best_dict = copy.deepcopy(self.current_flow_dict)
             
-            # If we reached the target, stop
             if self._calculate_solution_distance(self.current_flow_dict, target_dict) == 0:
                 break
         
-        # Restore original state
         self.current_flow_dict = original_flow_dict
         self.current_flow_value = original_flow_value
         
@@ -293,22 +254,16 @@ class TabuSearch:
         if not self.enable_path_relinking:
             return False
         
-        # Execute path relinking every N iterations with certain probability
         if iteration % self.path_relinking_frequency == 0 and self.random.random() < self.path_relinking_prob:
-            # Need at least 2 elite solutions for path relinking
             if len(self.elite_solutions) >= 2:
                 self.path_relinking_executions += 1
                 
-                # Choose two different elite solutions
-                elite1_value, elite1_dict = self.random.choice(self.elite_solutions)
-                elite2_value, elite2_dict = self.random.choice(self.elite_solutions)
+                _, elite1_dict = self.random.choice(self.elite_solutions)
+                _, elite2_dict = self.random.choice(self.elite_solutions)
                 
-                # Ensure they are different
                 if elite1_dict != elite2_dict:
-                    # Execute path relinking between the two solutions
                     best_value, best_dict = self._path_relink(elite1_dict, elite2_dict)
                     
-                    # If we found a better solution, update it
                     if best_value > self.best_flow_value:
                         self.best_flow_value = best_value
                         self.best_flow_dict = copy.deepcopy(best_dict)
@@ -321,32 +276,26 @@ class TabuSearch:
         
         return False
 
-    # ========== MAIN ALGORITHM ==========
     
     def run(self):
         """Main enhanced tabu search algorithm"""
         if self.show_logs: 
             self.logger.info(f"    --- Starting Enhanced Run {self.run_id:02d} (Seed: {self.random.getstate()[1][0]}) ---")
         
-        # Algorithm parameters
         max_iterations = self.config['tabu_search']['max_iterations']
         optimal_flow_bound = self.network.get_max_possible_flow()
         num_evaluations = 0
         intensify_limit = self.intensify_config.get('stagnation_limit', 0)
         diversify_limit = self.diversify_config.get('reset_limit', 0)
 
-        # Main algorithm loop
         for i in range(max_iterations):
-            # Diversification strategy
             if diversify_limit > 0 and self.stagnation_counter >= diversify_limit:
                 self._perform_diversification()
                 self.stagnation_counter = 0
-            # Intensification strategy
             elif intensify_limit > 0 and self.stagnation_counter >= intensify_limit:
                 self._perform_intensification()
                 self.stagnation_counter = 0
 
-            # Update progress tracking
             if self.progress_dict is not None:
                 self.progress_dict[self.run_id] = {
                     'iter': i, 
@@ -357,14 +306,12 @@ class TabuSearch:
                     'moves_evaluated': self.total_moves_evaluated
                 }
 
-            # Path relinking strategy
             if self._perform_path_relinking(i):
                 self.stagnation_counter = 0
                 self.iteration_of_best = i
                 self.evaluations_to_best = num_evaluations
                 self._update_elite_solutions(self.best_flow_value, self.best_flow_dict)
 
-            # Find augmenting path (main move)
             move = self._find_augmenting_path()
             num_evaluations += 1
 
@@ -375,27 +322,21 @@ class TabuSearch:
             path, flow_to_push = move
             bottleneck_edge = self._get_bottleneck_edge(path, flow_to_push)
             
-            # Traditional tabu conditions
             is_tabu = bottleneck_edge in self.tabu_list
             new_potential_flow = self.current_flow_value + flow_to_push
             aspiration_holds = new_potential_flow > self.best_flow_value
             
-            # Enhanced move evaluation with frequency memory
             move_value = self._evaluate_move_with_frequency(move)
             
-            # Acceptance criteria (enhanced)
             if not is_tabu or aspiration_holds:
-                # Apply the move
                 self.current_flow_value += flow_to_push
                 for j in range(len(path) - 1):
                     u, v = path[j], path[j+1]
                     self.current_flow_dict[(u, v)] += flow_to_push
                 
-                # Update tabu list and frequency memory
                 self.tabu_list.append(bottleneck_edge)
                 self._update_frequency_memory(bottleneck_edge)
                 
-                # Check for improvement
                 if self.current_flow_value > self.best_flow_value:
                     self.best_flow_value = self.current_flow_value
                     self.best_flow_dict = copy.deepcopy(self.current_flow_dict)
@@ -409,16 +350,13 @@ class TabuSearch:
                 else:
                     self.stagnation_counter += 1
 
-            # Update history
             self.history.append(self.best_flow_value)
             
-            # Check termination condition
             if abs(self.best_flow_value - optimal_flow_bound) < 1e-3:
                 if self.show_logs: 
                     self.logger.info(f"      [Run {self.run_id:02d}][Iter {i:05d}] Optimal flow reached. Terminating early.")
                 break
         
-        # Final logging
         if self.show_logs: 
             self.logger.info(f"    --- Finished Enhanced Run {self.run_id:02d}. Final Best Flow: {self.best_flow_value:.6f} ---")
             self.logger.info(f"    --- Enhanced Statistics ---")
@@ -433,7 +371,6 @@ class TabuSearch:
             "iteration_of_best": self.iteration_of_best, 
             "evaluations_to_best": self.evaluations_to_best, 
             "history": self.history,
-            # Enhanced statistics
             "frequency_penalties_applied": self.frequency_penalties_applied,
             "path_relinking_executions": self.path_relinking_executions,
             "best_solutions_from_path_relinking": self.best_solutions_from_path_relinking,
