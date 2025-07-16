@@ -7,7 +7,7 @@ strategies:
     # Dopo quante iterazioni senza miglioramento si attiva l'intensificazione.
     # L'algoritmo ripartirà da una delle migliori soluzioni trovate.
     # Impostare a 0 per disabilitare.
-    stagnation_limit: 500
+    stagnation_limit: 250
     # Numero di soluzioni "elite" da tenere in memoria.
     elite_solutions_count: 5
 
@@ -16,7 +16,7 @@ strategies:
     # L'algoritmo eseguirà un "reset" per esplorare una nuova area.
     # Questo limite dovrebbe essere più alto di quello dell'intensificazione.
     # Impostare a 0 per disabilitare.
-    reset_limit: 2000
+    reset_limit: 1000
 
 output:
   results_directory: 'data/results'

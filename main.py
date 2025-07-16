@@ -1,4 +1,3 @@
-# main.py
 import os
 import re
 import time
@@ -10,7 +9,7 @@ import multiprocessing
 from functools import partial
 import logging
 
-from src.data.network_reader import read_network, compute_reference_max_flow
+from src.data.network_reader import NetworkData, read_network, compute_reference_max_flow
 from src.algorithms.tabu_search import TabuSearch
 from src.visualization.plotter import plot_all_runs_convergence, plot_best_run_convergence
 from src.utils.logging_utils import setup_queue_logging, setup_main_logger
@@ -25,7 +24,6 @@ def run_single_trial(run_id: int, log_queue, network_data: 'NetworkData', config
     seed = config['experiments']['random_seeds'][run_id - 1]
     
     start_time = time.time()
-    # Passa 'show_logs' al costruttore di TabuSearch
     ts_solver = TabuSearch(network_data, config, seed, run_id, logger, show_logs)
     result = ts_solver.run()
     end_time = time.time()
@@ -60,7 +58,6 @@ def process_results(run_results: list, total_execution_time: float, network_data
         "total_execution_time": total_execution_time
     }
 
-    # Genera le stringhe di riepilogo finale
     summary_log = "="*80 + "\n--- Performance Summary ---\n" + "="*80 + "\n"
     summary_log += f"  1. Best flow found (across all runs):   {summary_stats['best_flow_found']:.6f}\n"
     summary_log += f"  2. Mean of best flows found:             {summary_stats['mean_flow']:.6f}\n"
@@ -130,7 +127,7 @@ def run_experiment_for_instance(network_path: str, config: dict, parallel: bool)
                                   log_queue=log_queue, 
                                   network_data=network_data, 
                                   config=config,
-                                  show_logs=show_worker_logs) # Questa riga passa l'argomento
+                                  show_logs=show_worker_logs) 
             with multiprocessing.Pool() as pool:
                 run_results = pool.map(worker_func, range(1, num_runs + 1))
         else:

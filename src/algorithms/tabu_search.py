@@ -7,7 +7,7 @@ from src.data.network_reader import NetworkData
 
 class TabuSearch:
     def __init__(self, network_data: NetworkData, config: dict, seed: int, run_id: int, logger: logging.Logger, show_logs: bool = True, progress_dict=None):
-        # Parametri e oggetti base
+    
         self.network = network_data
         self.config = config
         self.graph = network_data.graph
@@ -19,20 +19,20 @@ class TabuSearch:
         self.show_logs = show_logs
         self.progress_dict = progress_dict
         
-        # Stato della soluzione corrente
+        # Current solution state
         self.current_flow_dict = {edge: 0.0 for edge in self.graph.edges}
         self.current_flow_value = 0.0
         
-        # Miglior soluzione globale trovata
+        # Best global solution found
         self.best_flow_value = 0.0
         self.best_flow_dict = {}
         
-        # Tracking delle performance
+        # Performance tracking
         self.iteration_of_best = 0
         self.evaluations_to_best = 0
         self.history = []
 
-        # Memorie e Criteri
+        # Memories and criteria
         self.strategies_config = config.get('strategies', {})
         self.stagnation_counter = 0
         self.tabu_list = deque(maxlen=config['tabu_search']['tabu_list_size'])
