@@ -15,7 +15,6 @@ from src.algorithms.tabu_search import TabuSearch
 from src.visualization.plotter import plot_all_runs_convergence, plot_best_run_convergence
 from src.utils.logging_utils import setup_queue_logging, setup_main_logger
 
-# *** CORREZIONE: Assicurati che la firma di questa funzione includa 'show_logs: bool' ***
 def run_single_trial(run_id: int, log_queue, network_data: 'NetworkData', config: dict, show_logs: bool) -> dict:
     """
     Funzione da eseguire in ogni processo parallelo.
@@ -62,7 +61,7 @@ def process_results(run_results: list, total_execution_time: float, network_data
     }
 
     # Genera le stringhe di riepilogo finale
-    summary_log = "\n" + "="*80 + "\n--- Aggregated Performance Summary ---\n" + "="*80 + "\n"
+    summary_log = "="*80 + "\n--- Performance Summary ---\n" + "="*80 + "\n"
     summary_log += f"  1. Best flow found (across all runs):   {summary_stats['best_flow_found']:.6f}\n"
     summary_log += f"  2. Mean of best flows found:             {summary_stats['mean_flow']:.6f}\n"
     summary_log += f"  3. Standard deviation of best flows:     {summary_stats['std_dev_flow']:.6f}\n"
@@ -109,6 +108,17 @@ def run_experiment_for_instance(network_path: str, config: dict, parallel: bool)
         main_logger.info("="*60)
 
         network_data = read_network(network_path)
+        main_logger.info(
+        f'''\n    ----- Network Info -----
+        Filename: {network_data.info["filename"]}
+        Number of nodes: {network_data.info["num_nodes"]}
+        Number of edges: {network_data.info["num_edges"]}
+        Source: {network_data.info["source"]}
+        Sink: {network_data.info["sink"]}
+        Total source capacity: {network_data.info["total_source_capacity"]}
+        Total sink capacity: {network_data.info["total_sink_capacity"]}
+    ------------------------\n'''
+        )
         
         total_start_time = time.time()
         num_runs = config['experiments']['num_runs']
@@ -136,7 +146,7 @@ def run_experiment_for_instance(network_path: str, config: dict, parallel: bool)
 
         total_end_time = time.time()
         total_execution_time = total_end_time - total_start_time
-        
+
         process_results(run_results, total_execution_time, network_data, config)
         
         main_logger.info(f"\n--- Experiment for {instance_name} Complete ---")

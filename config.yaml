@@ -1,17 +1,41 @@
 tabu_search:
+  tabu_list_size: 40
   max_iterations: 20000
-  tabu_list_size: 20
 
-experiments:
-  num_runs: 10
-  random_seeds: [42, 123, 456, 789, 101, 202, 303, 404, 505, 606]
+strategies:
+  intensification:
+    # Dopo quante iterazioni senza miglioramento si attiva l'intensificazione.
+    # L'algoritmo ripartirà da una delle migliori soluzioni trovate.
+    # Impostare a 0 per disabilitare.
+    stagnation_limit: 500
+    # Numero di soluzioni "elite" da tenere in memoria.
+    elite_solutions_count: 5
+
+  diversification:
+    # Dopo quante iterazioni senza miglioramento si attiva la diversificazione.
+    # L'algoritmo eseguirà un "reset" per esplorare una nuova area.
+    # Questo limite dovrebbe essere più alto di quello dell'intensificazione.
+    # Impostare a 0 per disabilitare.
+    reset_limit: 2000
 
 output:
-  save_results: true
-  results_directory: "data/results"
-  show_worker_logs_in_parallel: False
+  results_directory: 'data/results'
+  show_worker_logs_in_parallel: false
 
 visualization:
   save_plots: true
-  style: "light" # options are 'light' or 'black'
-  plot_formats: ["png"]
+  style: 'light' # options are 'light' or 'dark'
+
+experiments:
+  num_runs: 10
+  random_seeds:
+    - 2147483648
+    - 1618033988
+    - 1732050810
+    - 2236067977
+    - 2645751311
+    - 3141592653
+    - 2718281828
+    - 1414213562
+    - 1000000007
+    - 1234567891

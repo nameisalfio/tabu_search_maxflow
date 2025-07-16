@@ -100,3 +100,4 @@ def plot_best_run_convergence(best_history: List[float], instance_name: str, out
     plt.savefig(filepath, dpi=300, bbox_inches='tight')
     plt.close(fig)
     return filepath
+

@@ -1,10 +1,8 @@
-# src/data/network_reader.py
 import os
-import networkx as nx
+import networkx as nx # type: ignore
 from typing import Dict, Any
 
 class NetworkData:
-    """A container for the graph, source, sink, and metadata."""
     def __init__(self, graph: nx.DiGraph, source: int, sink: int, info: Dict[str, Any]):
         self.graph = graph
         self.source = source
@@ -12,13 +10,9 @@ class NetworkData:
         self.info = info
 
     def get_max_possible_flow(self) -> float:
-        """Returns the theoretical maximum flow, capped by source/sink capacity."""
         return min(self.info.get('total_source_capacity', 0), self.info.get('total_sink_capacity', 0))
 
 def read_network(filepath: str) -> NetworkData:
-    """
-    Reads a network file and returns a NetworkData object.
-    """
     if not os.path.exists(filepath):
         raise FileNotFoundError(f"File not found: {filepath}")
 
@@ -27,14 +21,13 @@ def read_network(filepath: str) -> NetworkData:
 
     source = int(lines[2])
     sink = int(lines[3])
-
     graph = nx.DiGraph()
     total_source_capacity = 0.0
     total_sink_capacity = 0.0
 
     for line in lines[4:]:
-        u, v, capacity = line.split()
-        u, v, capacity = int(u), int(v), float(capacity)
+        u, v, capacity_str = line.split()
+        u, v, capacity = int(u), int(v), float(capacity_str)
         if capacity > 0:
             graph.add_edge(u, v, capacity=capacity)
             if u == source:
@@ -57,8 +50,7 @@ def read_network(filepath: str) -> NetworkData:
     return NetworkData(graph, source, sink, info)
 
 def compute_reference_max_flow(network_data: NetworkData) -> float:
-    """Computes the exact maximum flow using a standard algorithm for validation."""
-    if not network_data.graph.has_node(network_data.source) or not network_data.graph.has_node(network_data.sink):
+    if not (network_data.graph.has_node(network_data.source) and network_data.graph.has_node(network_data.sink)):
         return 0.0
     try:
         max_flow_value, _ = nx.maximum_flow(
