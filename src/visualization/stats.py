@@ -9,7 +9,7 @@ from matplotlib.patches import Rectangle
 import matplotlib.patches as mpatches
 
 def _setup_style(style: str = "dark"):
-    """Imposta uno stile grafico avanzato per matplotlib."""
+    """Apply advanced matplotlib styling based on the chosen theme."""
     if style == "dark":
         plt.style.use('dark_background')
         plt.rcParams.update({
@@ -42,18 +42,18 @@ def _setup_style(style: str = "dark"):
         })
 
 def load_config(config_path='config.yaml'):
-    """Carica il file di configurazione."""
+    """Load the configuration file (YAML format)."""
     abs_path = os.path.abspath(config_path)
-    print(f"Ricerca del file di configurazione in: {abs_path}")
+    print(f"Looking for configuration file at: {abs_path}")
     try:
         with open(config_path, 'r') as f:
             return yaml.safe_load(f)
     except (FileNotFoundError, yaml.YAMLError) as e:
-        print(f"Attenzione: config.yaml non trovato o non valido ({e}). Uso tema light di default.")
+        print(f"Warning: config.yaml not found or invalid ({e}). Falling back to default light theme.")
         return {}
 
 def parse_log_data(filepath):
-    """Estrae i dati dal file di log, incluso l'ID della rete dal nome del file."""
+    """Extract data from log file, including network ID and metrics."""
     try:
         with open(filepath, 'r') as f:
             content = f.read()
@@ -64,7 +64,7 @@ def parse_log_data(filepath):
         match_iter = re.search(r"Mean iterations to find best solution:\s*([\d.]+)", content)
         
         if not all([match_id, match_nodes, match_edges, match_iter]):
-            print(f"Attenzione: Dati mancanti nel file {filepath}")
+            print(f"Warning: Missing values in file {filepath}")
             return None
 
         return {
@@ -74,15 +74,15 @@ def parse_log_data(filepath):
             "mean_iterations": float(match_iter.group(1)),
         }
     except (IOError, ValueError) as e:
-        print(f"Errore durante il parsing del file {filepath}: {e}")
+        print(f"Error while parsing file {filepath}: {e}")
         return None
 
 def ensure_dir_exists(path):
-    """Assicura che la directory per un dato percorso esista."""
+    """Ensure that the directory for the given path exists."""
     os.makedirs(os.path.dirname(path), exist_ok=True)
 
 def create_categorical_scalability_plot(df, style="dark"):
-    """Crea un grafico a barre categorico che confronta iterazioni e archi per istanza."""
+    """Create a bar plot comparing iterations and edges per network instance."""
     fig, ax1 = plt.subplots(figsize=(20, 12))
 
     if style == "dark":
@@ -92,8 +92,8 @@ def create_categorical_scalability_plot(df, style="dark"):
 
     x_pos = np.arange(len(df))
     bar_width = 0.35
-    
-    # Barre e linea per le iterazioni
+
+    # Bars and line for mean iterations
     ax1.bar(x_pos - bar_width/2, df['mean_iterations'], bar_width,
             label='Mean Iterations', color=colors['iterations'], alpha=0.8)
     ax1.plot(x_pos - bar_width/2, df['mean_iterations'], color=colors['iterations'],
@@ -103,7 +103,7 @@ def create_categorical_scalability_plot(df, style="dark"):
     ax1.tick_params(axis='y', labelcolor=colors['iterations'], labelsize=11)
     ax1.set_xlabel('Network Instance', fontsize=14, fontweight='bold')
 
-    # Asse secondario per gli archi
+    # Secondary axis for number of edges
     ax2 = ax1.twinx()
     ax2.bar(x_pos + bar_width/2, df['num_edges'], bar_width,
             label='Number of Edges', color=colors['edges'], alpha=0.8)
@@ -113,13 +113,12 @@ def create_categorical_scalability_plot(df, style="dark"):
     ax2.set_ylabel('Number of Edges', color=colors['edges'], fontsize=14, fontweight='bold')
     ax2.tick_params(axis='y', labelcolor=colors['edges'], labelsize=11)
 
-    # Configurazione asse X
+    # X-axis labels
     ax1.set_xticks(x_pos)
-    # Usa l'ID della rete per le etichette, come richiesto
     xticklabels = [f"network_{nid}" for nid in df['network_id']]
     ax1.set_xticklabels(xticklabels, rotation=45, ha='right', fontsize=11)
 
-    # Titolo e legenda
+    # Title and legend
     plt.suptitle('Scalability Analysis per Network Instance', fontsize=22, fontweight='bold', y=0.98)
     
     handles1, labels1 = ax1.get_legend_handles_labels()
@@ -131,7 +130,7 @@ def create_categorical_scalability_plot(df, style="dark"):
     return fig
 
 def create_single_correlation_plot(df, style="dark"):
-    """Crea un singolo grafico di correlazione tra archi e iterazioni."""
+    """Create a correlation scatter plot: number of edges vs mean iterations."""
     fig, ax = plt.subplots(figsize=(12, 8))
 
     if style == "dark":
@@ -139,11 +138,9 @@ def create_single_correlation_plot(df, style="dark"):
     else:
         colors = {'scatter': '#2a9d8f', 'line': '#e76f51'}
 
-    # Scatter plot
     ax.scatter(df['num_edges'], df['mean_iterations'],
                s=120, c=colors['scatter'], alpha=0.7, edgecolors='white', linewidth=1.5)
 
-    # Linea di regressione lineare
     z = np.polyfit(df['num_edges'], df['mean_iterations'], 1)
     p = np.poly1d(z)
     ax.plot(df['num_edges'], p(df['num_edges']),
@@ -160,49 +157,46 @@ def create_single_correlation_plot(df, style="dark"):
     return fig
 
 def main():
-    """Funzione principale per eseguire l'analisi e generare i grafici."""
+    """Main function to execute the analysis and generate plots."""
     config = load_config('config.yaml')
     vis_config = config.get('visualization', {})
     style = vis_config.get('style', 'dark')
 
     _setup_style(style)
-    print(f"--- Utilizzo del tema '{style}' per i grafici ---")
+    print(f"\n--- Using '{style}' theme for plotting ---")
 
     results_dir = 'data/results'
     log_files = glob.glob(os.path.join(results_dir, 'network_*', '*.log'))
 
     if not log_files:
-        print("Nessun file di log trovato.")
+        print("No log files found.")
         return
 
     performance_data = [d for d in [parse_log_data(f) for f in log_files] if d is not None]
     if not performance_data:
-        print("Nessun dato valido estratto.")
+        print("No valid performance data extracted.")
         return
 
-    # Ordina il DataFrame in base a 'network_id' per rispettare l'ordine dei file
     df = pd.DataFrame(performance_data).sort_values(by="network_id").reset_index(drop=True)
 
-    print("\n--- Dati di Performance Estratti (ordinati per istanza) ---")
+    print("\n--- Extracted Performance Data (sorted by network) ---")
     print(df.to_string(index=False))
 
-    # Grafico 1: Scalabilità categorica
-    print("\n--- Creazione Grafico di Scalabilità per Istanza ---")
+    # Plot 1: Scalability
+    print("\n--- Creating Scalability Plot per Instance ---")
     fig1 = create_categorical_scalability_plot(df, style)
     output_path1 = os.path.join(results_dir, 'stats', 'scalability_by_instance.png')
     ensure_dir_exists(output_path1)
     fig1.savefig(output_path1, dpi=300, bbox_inches='tight', facecolor=fig1.get_facecolor())
-    print(f"Grafico salvato in: {output_path1}")
+    print(f"Plot saved at: {output_path1}")
 
-    # Grafico 2: Correlazione singola
-    print("\n--- Creazione Grafico di Correlazione (Archi vs Iterazioni) ---")
+    # Plot 2: Correlation
+    print("\n--- Creating Correlation Plot ---")
     fig2 = create_single_correlation_plot(df, style)
     output_path2 = os.path.join(results_dir, 'stats', 'correlation_edges_vs_iterations.png')
     ensure_dir_exists(output_path2)
     fig2.savefig(output_path2, dpi=300, bbox_inches='tight', facecolor=fig2.get_facecolor())
-    print(f"Grafico di correlazione salvato in: {output_path2}")
+    print(f"Plot saved at: {output_path2}")
 
-    plt.show()
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

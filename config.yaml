@@ -1,3 +1,5 @@
+# Enhanced Tabu Search Configuration for Maximum Flow Problem
+
 tabu_search:
   tabu_list_size: 40
   max_iterations: 20000
@@ -7,16 +9,37 @@ strategies:
     # Dopo quante iterazioni senza miglioramento si attiva l'intensificazione.
     # L'algoritmo ripartirà da una delle migliori soluzioni trovate.
     # Impostare a 0 per disabilitare.
-    stagnation_limit: 250
+    stagnation_limit: 100
     # Numero di soluzioni "elite" da tenere in memoria.
     elite_solutions_count: 5
-
+  
   diversification:
     # Dopo quante iterazioni senza miglioramento si attiva la diversificazione.
     # L'algoritmo eseguirà un "reset" per esplorare una nuova area.
     # Questo limite dovrebbe essere più alto di quello dell'intensificazione.
     # Impostare a 0 per disabilitare.
-    reset_limit: 1000
+    reset_limit: 300
+
+# ========== ENHANCED FEATURES ==========
+
+# Memoria di frequenza a lungo termine
+frequency:
+  enabled: true
+  # Parametro di penalizzazione per mosse frequenti (0.001 - 0.1)
+  # Valori più alti = maggiore penalizzazione per mosse ripetute
+  alpha: 0.01
+
+# Path relinking tra soluzioni elite
+path_relinking:
+  enabled: true
+  # Ogni quante iterazioni controllare se eseguire path relinking
+  frequency: 50
+  # Probabilità di eseguire path relinking quando viene controllato
+  probability: 0.3
+  # Numero massimo di passi per ogni sessione di path relinking
+  max_steps: 10
+
+# ========== OUTPUT CONFIGURATION ==========
 
 output:
   results_directory: 'data/results'
@@ -24,10 +47,13 @@ output:
 
 visualization:
   save_plots: true
-  style: 'light' # options are 'light' or 'dark'
+  style: 'light'  # options: 'light' or 'dark'
+
+# ========== EXPERIMENTAL SETUP ==========
 
 experiments:
   num_runs: 10
+  # Semi casuali per garantire riproducibilità
   random_seeds:
     - 2147483648
     - 1618033988
@@ -39,3 +65,22 @@ experiments:
     - 1414213562
     - 1000000007
     - 1234567891
+
+# ========== ADVANCED TUNING (OPTIONAL) ==========
+
+# Parametri avanzati per il fine-tuning
+advanced:
+  # Soglia per considerare due soluzioni "diverse" nel path relinking
+  solution_distance_threshold: 1
+  
+  # Fattore di riduzione del flusso durante path relinking
+  flow_reduction_factor: 0.5
+  
+  # Numero minimo di soluzioni elite per attivare path relinking
+  min_elite_for_path_relinking: 2
+  
+  # Logging avanzato
+  detailed_logging: false
+  
+  # Salvataggio delle statistiche di frequenza
+  save_frequency_stats: false
