@@ -153,7 +153,6 @@ class TabuSearch:
         
         return final_value
 
-    
     def _solution_to_signature(self, flow_dict: Dict[Tuple[int, int], float]) -> frozenset:
         """Convert solution to signature for comparison"""
         active_edges = frozenset((u, v) for (u, v), flow in flow_dict.items() if flow > 1e-9)
@@ -185,9 +184,9 @@ class TabuSearch:
         return selected_move
     
     def run(self):
-        """Main enhanced tabu search algorithm"""
+        """Main tabu search algorithm"""
         if self.show_logs: 
-            self.logger.info(f"    --- Starting Enhanced Run {self.run_id:02d} (Seed: {self.random.getstate()[1][0]}) ---")
+            self.logger.info(f"    --- Starting Run {self.run_id:02d} (Seed: {self.random.getstate()[1][0]}) ---")
         
         max_iterations = self.config['tabu_search']['max_iterations']
         optimal_flow_bound = self.network.get_max_possible_flow()
@@ -258,8 +257,8 @@ class TabuSearch:
                 break
         
         if self.show_logs: 
-            self.logger.info(f"    --- Finished Enhanced Run {self.run_id:02d}. Final Best Flow: {self.best_flow_value:.6f} ---")
-            self.logger.info(f"    --- Enhanced Statistics ---")
+            self.logger.info(f"    --- Finished Run {self.run_id:02d}. Final Best Flow: {self.best_flow_value:.6f} ---")
+            self.logger.info(f"    --- Statistics ---")
             self.logger.info(f"    --- Frequency penalties applied: {self.frequency_penalties_applied} ---")
             self.logger.info(f"    --- Total moves evaluated: {self.total_moves_evaluated} ---\n")
         
