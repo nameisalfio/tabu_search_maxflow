@@ -1,245 +1,156 @@
-# Maximum Flow Problem - Tabu Search
+# 🚀 Advanced Tabu Search for the Maximum Flow Problem
 
-Implementazione di un algoritmo Tabu Search per il Maximum Flow Problem, sviluppato per il corso di **Heuristics & Metaheuristics**.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python Version](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
 
-## 🎯 Obiettivo
+## 🔎 Problem Formalization
 
-Risolvere il problema del massimo flusso utilizzando una metaeuristica Tabu Search, con l'obiettivo di trovare il flusso massimo che può essere inviato da una sorgente a un pozzo in un grafo diretto con capacità associate agli archi.
+The **Maximum Flow Problem (MFP)** is a classical combinatorial optimization problem with numerous real-world applications in transportation, telecommunication, and resource allocation.
 
-## 📁 Struttura Progetto
+Given a directed graph **G = (V, E)** with positive capacities **c(u, v)** associated with each edge **(u, v) ∈ E**, the objective is to determine the **maximum flow** that can be sent from a **source node** `s ∈ V` to a **sink node** `t ∈ V`, subject to the following constraints:
 
-```
-max_flow_tabu/
-├── config.yaml
-├── data
-│   ├── networks
-│   │   ├── network_11520.txt
-│   │   ├── network_1440.txt
-│   │   ├── network_160.txt
-│   │   ├── network_23040.txt
-│   │   ├── network_2880.txt
-│   │   ├── network_4320.txt
-│   │   ├── network_500.txt
-│   │   ├── network_5760.txt
-│   │   ├── network_7200.txt
-│   │   └── network_960.txt
-│   └── results
-├── main.py
-├── README.md
-├── requirements.txt
-├── run_experiments.py
-└── src
-    ├── __init__.py
-    ├── algorithms
-    │   ├── __init__.py
-    │   └── tabu_search.py
-    ├── data
-    │   ├── __init__.py
-    │   └── network_reader.py
-    └── visualization
-        ├── __init__.py
-        └── plotter.py
-```
+1. **Capacity Constraints**:  
+   For all edges (u, v) ∈ E:  
+   `0 ≤ f(u, v) ≤ c(u, v)`
 
-## 🚀 Quick Start
+2. **Flow Conservation**:  
+   For every node `v ∈ V \ {s, t}`, the total incoming flow must equal the total outgoing flow:  
+   `∑_{(u,v)∈E} f(u, v) = ∑_{(v,w)∈E} f(v, w)`
 
-### Installazione
-```bash
-# Clona/setup progetto
-git clone <repository> && cd max_flow_tabu
+3. **Objective Function**:  
+   Maximize the total flow sent from the source:  
+   `Maximize ∑_{(s,v)∈E} f(s, v)`
 
-# Installa dipendenze
-pip install -r requirements.txt
+This formal structure ensures the solution complies with both physical feasibility (capacity limits) and logical consistency (flow conservation), while optimizing the global objective of maximizing flow throughput from source to sink.
 
-# Aggiungi file network in data/networks/
-```
+## Key Features
 
-### Esecuzione Singola
-```bash
-# Esegui su un network specifico
-python main.py --network data/networks/network_5760.txt
+- **Advanced Tabu Search Core**: Implements a powerful TS algorithm with three distinct memory systems for a balanced search strategy.
+- **Adaptive Search Strategies**: Dynamically alternates between **intensification** (deepening the search in promising regions) and **diversification** (exploring new areas) based on search stagnation.
+- **Multi-layered Memory System**:
+  - **Short-Term Memory**: A classic Tabu List to prevent cycles by forbidding recent moves (based on bottleneck edges).
+  - **Long-Term Memory**: A frequency-based memory that penalizes frequently used moves to encourage diversification over the entire search history.
+  - **Intermediate Memory**: An elite solutions archive to store the best-found solutions, used as starting points for intensification phases.
+- **Parallel Execution**: Leverages Python's `multiprocessing` to run multiple experimental trials in parallel, significantly speeding up data collection.
+- **Extensive Configuration**: All algorithmic parameters, experimental settings, and visualization options are managed through a central `config.yaml` file.
+- **Automated Analysis & Visualization**: Automatically generates detailed summary statistics, convergence plots for each run, and scalability analysis graphs.
 
-# Con parametri personalizzati
-python main.py --network data/networks/network_5760.txt --config config.yaml
-```
+## Project Structure
 
-### Esperimenti Multipli
-```bash
-# Multiple run su un network (10 run con semi diversi)
-python main.py --network data/networks/network_5760.txt --multiple
-
-# Batch su tutti i network
-python run_experiments.py
-```
-
-## ⚙️ Configurazione
-
-Il file `config.yaml` permette di personalizzare tutti i parametri:
-
-```yaml
-tabu_search:
-  max_iterations: 20000      # Numero massimo iterazioni
-  tabu_list_size: 10         # Dimensione lista tabu
-  aspiration_enabled: true   # Abilita criterio aspirazione
-  delta_step: 1             # Passo incremento/decremento
-
-visualization:
-  theme: "dark"             # "dark" o "light"
-  save_plots: true          # Salva grafici
-  show_plots: false         # Mostra grafici
-```
-
-## 🧮 Algoritmo Tabu Search
-
-### Pseudocodice
+The project is organized into a modular structure for clarity and maintainability:
 
 ```
-TABU_SEARCH_MAX_FLOW(Graph G, source s, sink t)
-BEGIN
-    // Inizializzazione
-    current_solution ← GREEDY_INITIAL_SOLUTION(G, s, t)
-    best_solution ← current_solution
-    tabu_list ← ∅ (max_size = tabu_list_size)
-    
-    FOR iteration ← 1 TO max_iterations DO
-        // Genera vicinato
-        neighbor_moves ← GENERATE_NEIGHBORHOOD(current_solution, G)
-        
-        // Seleziona migliore mossa ammissibile
-        best_move ← null
-        best_value ← -∞
-        
-        FOR each move IN neighbor_moves DO
-            IF NOT IS_TABU(move) OR ASPIRATION_CRITERION(move) THEN
-                value ← EVALUATE_MOVE(current_solution, move)
-                IF value > best_value AND IS_FEASIBLE(move) THEN
-                    best_move ← move
-                    best_value ← value
-                END IF
-            END IF
-        END FOR
-        
-        // Applica mossa e aggiorna
-        current_solution ← APPLY_MOVE(current_solution, best_move)
-        ADD_TO_TABU_LIST(tabu_list, best_move)
-        
-        IF VALUE(current_solution) > VALUE(best_solution) THEN
-            best_solution ← current_solution
-        END IF
-    END FOR
-    
-    RETURN best_solution
-END
+tabu-search-maxflow/
+├── config.yaml               # Main configuration file
+├── main.py                   # Entry point to run experiments
+├── requirements.txt          # Project dependencies
+├── LICENSE                   # Project license
+├── README.md                 # This documentation file
+├── data/
+│   ├── networks/             # Input network instances (.txt)
+│   └── results/              # Output directory for logs, plots, and stats
+└── src/
+    ├── algorithms/
+    │   └── tabu_search.py    # Core Tabu Search implementation
+    ├── data/
+    │   └── network_reader.py # Utilities for reading network files
+    ├── utils/
+    │   └── logging_utils.py  # Advanced logging for parallel processes
+    └── visualization/
+        ├── plotter.py        # Generates convergence plots
+        └── stats.py          # Generates summary/scalability plots
 ```
 
-### Componenti Principali
+## Installation
 
-1. **Soluzione Iniziale**: Algoritmo greedy basato su Ford-Fulkerson semplificato
-2. **Generazione Vicinato**: Mosse di incremento/decremento su archi esistenti
-3. **Lista Tabu**: Memoria delle mosse recenti (FIFO con dimensione fissa)
-4. **Criterio di Aspirazione**: Permette mosse tabu se migliorano il best-known
-5. **Valutazione Fattibilità**: Controllo vincoli di capacità e conservazione flusso
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/nameisalfio/tabu_search_maxflow.git
+    cd tabu_search_maxflow
+    ```
 
-### Operatori di Vicinato
+2.  **Install the required dependencies:**
+    It is recommended to use a virtual environment.
+    ```bash
+    python -m venv venv
+    source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
+    pip install -r requirements.txt
+    ```
 
-```python
-# Mossa di incremento su arco (u,v)
-if current_flow[u][v] < capacity[u][v]:
-    move = TabuMove((u,v), delta_step, 'increase')
+## Configuration
 
-# Mossa di decremento su arco (u,v)  
-if current_flow[u][v] > 0:
-    move = TabuMove((u,v), delta_step, 'decrease')
-```
+The entire experiment is controlled by the `config.yaml` file. Here you can define:
+- **`tabu_search`**: Basic TS parameters like `max_iterations` and `tabu_list_size`.
+- **`strategies`**: Thresholds for triggering intensification and diversification (`stagnation_limit`, `reset_limit`) and the number of `elite_solutions` to store.
+- **`frequency`**: Settings for the long-term memory, such as the penalty factor `alpha`.
+- **`experiments`**: Number of runs (`num_runs`) and the list of `random_seeds` for reproducibility.
+- **`output`**: Directory for saving results and logging verbosity.
+- **`visualization`**: Options to enable/disable plot generation and choose a style (`light` or `dark`).
 
-### Gestione Memoria Tabu
+## Usage
 
-```python
-class TabuMove:
-    arc: (from_node, to_node)      # Arco modificato
-    delta: int                     # Quantità variazione
-    move_type: str                 # 'increase' o 'decrease'
+The main script `main.py` is used to launch the experiments.
 
-# Lista FIFO con dimensione massima
-tabu_list = deque(maxlen=tabu_list_size)
-```
+#### Running on a Single Network Instance
 
-## 📊 Output e Risultati
-
-### Risultati JSON
-```json
-{
-  "network_file": "network_5760.txt",
-  "flow_value": 150,
-  "execution_time": 5.23,
-  "iterations": 8500,
-  "convergence_history": [120, 135, 150, ...],
-  "parameters": {...}
-}
-```
-
-### Grafici Automatici
-- **Convergenza**: Evoluzione valore flusso nel tempo
-- **Multiple Runs**: Confronto tra diverse esecuzioni  
-- **Statistiche**: Confronto tra diversi network
-- **Tema Scuro**: Visualizzazioni professionali
-
-### Metriche Calcolate
-- **Best**: Miglior valore trovato
-- **Mean**: Media su multiple run
-- **Std**: Deviazione standard
-- **Execution Time**: Tempo medio di esecuzione
-- **Iterations**: Numero medio iterazioni
-
-## 🔧 Personalizzazioni
-
-### Modifica Parametri
-```python
-# In config.yaml
-tabu_search:
-  max_iterations: 10000    # Per test rapidi
-  tabu_list_size: 15       # Più memoria
-  delta_step: 2           # Passi maggiori
-```
-
-### Cambio Tema Visualizzazioni
-```python
-# Dark theme (default)
-visualization:
-  theme: "dark"
-
-# Light theme  
-visualization:
-  theme: "light"
-```
-
-## 📈 Analisi Performance
-
-Il sistema traccia automaticamente:
-- Tempo di esecuzione per iterazione
-- Storia di convergenza completa
-- Statistiche su multiple run
-- Confronti tra parametri diversi
-
-## 🧪 Testing
+To run the experiment on a specific network file:
 
 ```bash
-# Test rapido con parametri ridotti
-python main.py --network data/networks/network_5760.txt --config config_quick.yaml
-
-# Debug con output verbose
-python main.py --network data/networks/network_5760.txt --multiple
+python main.py --network data/networks/network_160.txt
 ```
 
-## 📚 Riferimenti
+#### Running on All Network Instances
 
-- **Problema**: Maximum Flow Problem (Ford-Fulkerson)
-- **Metaeuristica**: Tabu Search (Glover, 1986)
-- **Applicazioni**: Reti di trasporto, telecomunicazioni, logistica
+To sequentially run the experiment for all network files in the `data/networks` directory:
 
-## ⚠️ Note
+```bash
+python main.py --all
+```
 
-- Assicurati che i file network seguano il formato specificato
-- Per network grandi, considera di ridurre `max_iterations`
-- I grafici sono salvati automaticamente in `data/results/`
-- Usa semi fissi per riproducibilità degli esperimenti
+#### Enabling Parallel Execution
+
+For multi-core systems, you can significantly speed up the experiments by running the trials for each instance in parallel. Add the `--parallel` flag to any of the commands above.
+
+```bash
+# Run all experiments in parallel mode
+python main.py --all --parallel
+```
+The results, including detailed logs and plots, will be saved in the `data/results/` directory, organized into subfolders for each network instance.
+
+## Results and Analysis
+
+The project includes tools to automatically generate insightful visualizations from the experiment logs. The `stats.py` script aggregates data from all runs to produce summary plots.
+
+### Convergence for Network 2880
+
+Below are the convergence plots for the instance **network_2880**, showcasing the robustness and consistency of the Tabu Search approach:
+
+#### 🔁 All Runs Convergence
+
+This plot illustrates the convergence trends of all 10 runs. The algorithm consistently finds the optimal flow across different random seeds, with low variance in performance.
+
+![All Runs Convergence](data/results/network_2880/convergence_all_runs_network_2880.png)
+
+#### 🏆 Best Run Performance
+
+The following plot shows the progression of the best-performing run out of the 10. It highlights how quickly and steadily the optimal flow value was reached.
+
+![Best Run Convergence](data/results/network_2880/convergence_best_run_network_2880.png)
+
+### Scalability Analysis
+
+The following plot illustrates the algorithm's scalability. It compares the mean number of iterations required to find the best solution against the number of edges for each network instance. This demonstrates how the algorithm's effort scales with problem size.
+
+![Scalability Analysis](data/results/stats/scalability_by_instance.png)
+
+### Performance Correlation
+
+This scatter plot shows the linear correlation between the number of edges in a network (a proxy for problem complexity) and the mean number of iterations needed. The strong positive correlation confirms that the computational effort grows predictably with the problem size.
+
+![Correlation Analysis](data/results/stats/correlation_edges_vs_iterations.png)
+
+In addition to these summary plots, detailed convergence graphs are generated for each instance, showing the performance of every single run and highlighting the best-performing one.
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
