@@ -1,0 +1,49 @@
+============================================================
+--- STARTING EXPERIMENT FOR INSTANCE: network_23040 ---
+--- Execution Mode: PARALLEL (Worker logs are hidden) ---
+============================================================
+
+    ----- Network Info -----
+        Filename: network_23040.txt
+        Number of nodes: 23042
+        Number of edges: 341481
+        Source: -2
+        Sink: -1
+        Total source capacity: 2223.0
+        Total sink capacity: 23968.0
+    ------------------------
+
+================================================================================
+--- Performance Summary ---
+================================================================================
+  1. Best flow found (across all runs):   2223.000000
+  2. Mean of best flows found:             2223.000000
+  3. Standard deviation of best flows:     0.000000
+  4. Mean iterations to find best solution:514.40
+  5. Mean evaluations to find best solution:515.40
+  6. Success Rate (reaching optimum):      100.0% (10/10)
+  Mean execution time per run:             998.0370 seconds
+  Total execution time for 10 runs:    1020.0481 seconds
+
+================================================================================
+--- Detailed Run-by-Run Statistics ---
+================================================================================
+ Run  Best Flow  Iterations to Best  Evaluations to Best  Execution Time (s)  Is Optimal
+   1     2223.0                 499                  500          972.501196        True
+   2     2223.0                 516                  517          995.693612        True
+   3     2223.0                 513                  514          992.411641        True
+   4     2223.0                 515                  516          994.114008        True
+   5     2223.0                 504                  505          976.154504        True
+   6     2223.0                 525                  526         1015.215120        True
+   7     2223.0                 522                  523         1012.337854        True
+   8     2223.0                 522                  523         1015.698591        True
+   9     2223.0                 516                  517         1009.825348        True
+  10     2223.0                 512                  513          996.417700        True
+
+================================================================================
+--- Generating Plots (Style: light) ---
+================================================================================
+  -> Saved all runs convergence plot to: data/results/network_23040/convergence_all_runs_network_23040.png
+  -> Saved best run convergence plot to: data/results/network_23040/convergence_best_run_network_23040.png
+
+--- Experiment for network_23040 Complete ---

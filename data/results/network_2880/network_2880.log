@@ -1,0 +1,49 @@
+============================================================
+--- STARTING EXPERIMENT FOR INSTANCE: network_2880 ---
+--- Execution Mode: PARALLEL (Worker logs are hidden) ---
+============================================================
+
+    ----- Network Info -----
+        Filename: network_2880.txt
+        Number of nodes: 2882
+        Number of edges: 41823
+        Source: -2
+        Sink: -1
+        Total source capacity: 341.0
+        Total sink capacity: 3087.0
+    ------------------------
+
+================================================================================
+--- Performance Summary ---
+================================================================================
+  1. Best flow found (across all runs):   341.000000
+  2. Mean of best flows found:             341.000000
+  3. Standard deviation of best flows:     0.000000
+  4. Mean iterations to find best solution:78.60
+  5. Mean evaluations to find best solution:79.60
+  6. Success Rate (reaching optimum):      100.0% (10/10)
+  Mean execution time per run:             19.9787 seconds
+  Total execution time for 10 runs:    23.0972 seconds
+
+================================================================================
+--- Detailed Run-by-Run Statistics ---
+================================================================================
+ Run  Best Flow  Iterations to Best  Evaluations to Best  Execution Time (s)  Is Optimal
+   1      341.0                  79                   80           19.648416        True
+   2      341.0                  76                   77           19.294655        True
+   3      341.0                  81                   82           20.076697        True
+   4      341.0                  74                   75           18.663049        True
+   5      341.0                  75                   76           18.729578        True
+   6      341.0                  81                   82           22.463535        True
+   7      341.0                  77                   78           19.368396        True
+   8      341.0                  79                   80           20.149299        True
+   9      341.0                  82                   83           20.651255        True
+  10      341.0                  82                   83           20.742071        True
+
+================================================================================
+--- Generating Plots (Style: light) ---
+================================================================================
+  -> Saved all runs convergence plot to: data/results/network_2880/convergence_all_runs_network_2880.png
+  -> Saved best run convergence plot to: data/results/network_2880/convergence_best_run_network_2880.png
+
+--- Experiment for network_2880 Complete ---

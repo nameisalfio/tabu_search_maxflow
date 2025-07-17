@@ -19,7 +19,6 @@ env/
 
 # Results and logs
 !data/results/.gitkeep
-*.log
 logs/
 
 # OS

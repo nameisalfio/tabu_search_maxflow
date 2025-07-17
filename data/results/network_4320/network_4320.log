@@ -1,0 +1,49 @@
+============================================================
+--- STARTING EXPERIMENT FOR INSTANCE: network_4320 ---
+--- Execution Mode: PARALLEL (Worker logs are hidden) ---
+============================================================
+
+    ----- Network Info -----
+        Filename: network_4320.txt
+        Number of nodes: 5762
+        Number of edges: 84955
+        Source: -2
+        Sink: -1
+        Total source capacity: 555.0
+        Total sink capacity: 6776.0
+    ------------------------
+
+================================================================================
+--- Performance Summary ---
+================================================================================
+  1. Best flow found (across all runs):   555.000000
+  2. Mean of best flows found:             555.000000
+  3. Standard deviation of best flows:     0.000000
+  4. Mean iterations to find best solution:120.50
+  5. Mean evaluations to find best solution:121.50
+  6. Success Rate (reaching optimum):      100.0% (10/10)
+  Mean execution time per run:             61.9604 seconds
+  Total execution time for 10 runs:    69.1582 seconds
+
+================================================================================
+--- Detailed Run-by-Run Statistics ---
+================================================================================
+ Run  Best Flow  Iterations to Best  Evaluations to Best  Execution Time (s)  Is Optimal
+   1      555.0                 128                  129           64.212985        True
+   2      555.0                 115                  116           60.294878        True
+   3      555.0                 113                  114           60.741759        True
+   4      555.0                 114                  115           57.391483        True
+   5      555.0                 122                  123           61.836391        True
+   6      555.0                 119                  120           61.736260        True
+   7      555.0                 122                  123           62.829506        True
+   8      555.0                 120                  121           60.852134        True
+   9      555.0                 130                  131           67.796540        True
+  10      555.0                 122                  123           61.911932        True
+
+================================================================================
+--- Generating Plots (Style: light) ---
+================================================================================
+  -> Saved all runs convergence plot to: data/results/network_4320/convergence_all_runs_network_4320.png
+  -> Saved best run convergence plot to: data/results/network_4320/convergence_best_run_network_4320.png
+
+--- Experiment for network_4320 Complete ---

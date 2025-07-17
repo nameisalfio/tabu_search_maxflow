@@ -1,0 +1,49 @@
+============================================================
+--- STARTING EXPERIMENT FOR INSTANCE: network_960 ---
+--- Execution Mode: PARALLEL (Worker logs are hidden) ---
+============================================================
+
+    ----- Network Info -----
+        Filename: network_960.txt
+        Number of nodes: 962
+        Number of edges: 13571
+        Source: -2
+        Sink: -1
+        Total source capacity: 117.7415
+        Total sink capacity: 1277.2585599999995
+    ------------------------
+
+================================================================================
+--- Performance Summary ---
+================================================================================
+  1. Best flow found (across all runs):   117.741500
+  2. Mean of best flows found:             117.741500
+  3. Standard deviation of best flows:     0.000000
+  4. Mean iterations to find best solution:20.20
+  5. Mean evaluations to find best solution:21.20
+  6. Success Rate (reaching optimum):      100.0% (10/10)
+  Mean execution time per run:             1.7648 seconds
+  Total execution time for 10 runs:    2.4304 seconds
+
+================================================================================
+--- Detailed Run-by-Run Statistics ---
+================================================================================
+ Run  Best Flow  Iterations to Best  Evaluations to Best  Execution Time (s)  Is Optimal
+   1   117.7415                  22                   23            1.863467        True
+   2   117.7415                  20                   21            1.792861        True
+   3   117.7415                  20                   21            1.774497        True
+   4   117.7415                  18                   19            1.685895        True
+   5   117.7415                  21                   22            1.654302        True
+   6   117.7415                  20                   21            1.595264        True
+   7   117.7415                  22                   23            2.087834        True
+   8   117.7415                  20                   21            1.802648        True
+   9   117.7415                  19                   20            1.568000        True
+  10   117.7415                  20                   21            1.823721        True
+
+================================================================================
+--- Generating Plots (Style: light) ---
+================================================================================
+  -> Saved all runs convergence plot to: data/results/network_960/convergence_all_runs_network_960.png
+  -> Saved best run convergence plot to: data/results/network_960/convergence_best_run_network_960.png
+
+--- Experiment for network_960 Complete ---

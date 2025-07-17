@@ -1,0 +1,49 @@
+============================================================
+--- STARTING EXPERIMENT FOR INSTANCE: network_11520 ---
+--- Execution Mode: PARALLEL (Worker logs are hidden) ---
+============================================================
+
+    ----- Network Info -----
+        Filename: network_11520.txt
+        Number of nodes: 11522
+        Number of edges: 170139
+        Source: -2
+        Sink: -1
+        Total source capacity: 1244.0
+        Total sink capacity: 12828.0
+    ------------------------
+
+================================================================================
+--- Performance Summary ---
+================================================================================
+  1. Best flow found (across all runs):   1244.000000
+  2. Mean of best flows found:             1244.000000
+  3. Standard deviation of best flows:     0.000000
+  4. Mean iterations to find best solution:265.60
+  5. Mean evaluations to find best solution:266.60
+  6. Success Rate (reaching optimum):      100.0% (10/10)
+  Mean execution time per run:             251.2304 seconds
+  Total execution time for 10 runs:    261.5979 seconds
+
+================================================================================
+--- Detailed Run-by-Run Statistics ---
+================================================================================
+ Run  Best Flow  Iterations to Best  Evaluations to Best  Execution Time (s)  Is Optimal
+   1     1244.0                 263                  264          248.419500        True
+   2     1244.0                 271                  272          255.155513        True
+   3     1244.0                 275                  276          260.038789        True
+   4     1244.0                 262                  263          246.854342        True
+   5     1244.0                 265                  266          249.397221        True
+   6     1244.0                 260                  261          247.164206        True
+   7     1244.0                 264                  265          248.051541        True
+   8     1244.0                 262                  263          247.715162        True
+   9     1244.0                 269                  270          258.237945        True
+  10     1244.0                 265                  266          251.270057        True
+
+================================================================================
+--- Generating Plots (Style: light) ---
+================================================================================
+  -> Saved all runs convergence plot to: data/results/network_11520/convergence_all_runs_network_11520.png
+  -> Saved best run convergence plot to: data/results/network_11520/convergence_best_run_network_11520.png
+
+--- Experiment for network_11520 Complete ---

@@ -1,0 +1,49 @@
+============================================================
+--- STARTING EXPERIMENT FOR INSTANCE: network_500 ---
+--- Execution Mode: PARALLEL (Worker logs are hidden) ---
+============================================================
+
+    ----- Network Info -----
+        Filename: network_500.txt
+        Number of nodes: 502
+        Number of edges: 6621
+        Source: -2
+        Sink: -1
+        Total source capacity: 107.97892
+        Total sink capacity: 699.5161899999999
+    ------------------------
+
+================================================================================
+--- Performance Summary ---
+================================================================================
+  1. Best flow found (across all runs):   107.978920
+  2. Mean of best flows found:             107.978920
+  3. Standard deviation of best flows:     0.000000
+  4. Mean iterations to find best solution:19.00
+  5. Mean evaluations to find best solution:20.00
+  6. Success Rate (reaching optimum):      100.0% (10/10)
+  Mean execution time per run:             1.0610 seconds
+  Total execution time for 10 runs:    1.6836 seconds
+
+================================================================================
+--- Detailed Run-by-Run Statistics ---
+================================================================================
+ Run  Best Flow  Iterations to Best  Evaluations to Best  Execution Time (s)  Is Optimal
+   1  107.97892                  20                   21            1.027692        True
+   2  107.97892                  21                   22            1.404682        True
+   3  107.97892                  18                   19            1.020022        True
+   4  107.97892                  18                   19            0.771628        True
+   5  107.97892                  20                   21            1.172438        True
+   6  107.97892                  19                   20            1.149406        True
+   7  107.97892                  19                   20            0.980433        True
+   8  107.97892                  17                   18            0.933697        True
+   9  107.97892                  21                   22            1.112627        True
+  10  107.97892                  17                   18            1.037383        True
+
+================================================================================
+--- Generating Plots (Style: light) ---
+================================================================================
+  -> Saved all runs convergence plot to: data/results/network_500/convergence_all_runs_network_500.png
+  -> Saved best run convergence plot to: data/results/network_500/convergence_best_run_network_500.png
+
+--- Experiment for network_500 Complete ---

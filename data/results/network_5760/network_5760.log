@@ -1,0 +1,49 @@
+============================================================
+--- STARTING EXPERIMENT FOR INSTANCE: network_5760 ---
+--- Execution Mode: PARALLEL (Worker logs are hidden) ---
+============================================================
+
+    ----- Network Info -----
+        Filename: network_5760.txt
+        Number of nodes: 11522
+        Number of edges: 170649
+        Source: -2
+        Sink: -1
+        Total source capacity: 1203.0
+        Total sink capacity: 12489.0
+    ------------------------
+
+================================================================================
+--- Performance Summary ---
+================================================================================
+  1. Best flow found (across all runs):   1203.000000
+  2. Mean of best flows found:             1203.000000
+  3. Standard deviation of best flows:     0.000000
+  4. Mean iterations to find best solution:269.60
+  5. Mean evaluations to find best solution:270.60
+  6. Success Rate (reaching optimum):      100.0% (10/10)
+  Mean execution time per run:             283.2348 seconds
+  Total execution time for 10 runs:    298.3303 seconds
+
+================================================================================
+--- Detailed Run-by-Run Statistics ---
+================================================================================
+ Run  Best Flow  Iterations to Best  Evaluations to Best  Execution Time (s)  Is Optimal
+   1     1203.0                 271                  272          284.408111        True
+   2     1203.0                 260                  261          272.830320        True
+   3     1203.0                 284                  285          297.056218        True
+   4     1203.0                 270                  271          283.545752        True
+   5     1203.0                 262                  263          279.023810        True
+   6     1203.0                 262                  263          275.893343        True
+   7     1203.0                 268                  269          284.906476        True
+   8     1203.0                 266                  267          280.298840        True
+   9     1203.0                 280                  281          291.679606        True
+  10     1203.0                 273                  274          282.705515        True
+
+================================================================================
+--- Generating Plots (Style: light) ---
+================================================================================
+  -> Saved all runs convergence plot to: data/results/network_5760/convergence_all_runs_network_5760.png
+  -> Saved best run convergence plot to: data/results/network_5760/convergence_best_run_network_5760.png
+
+--- Experiment for network_5760 Complete ---

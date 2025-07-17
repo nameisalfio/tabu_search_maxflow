@@ -1,0 +1,49 @@
+============================================================
+--- STARTING EXPERIMENT FOR INSTANCE: network_7200 ---
+--- Execution Mode: PARALLEL (Worker logs are hidden) ---
+============================================================
+
+    ----- Network Info -----
+        Filename: network_7200.txt
+        Number of nodes: 23042
+        Number of edges: 341908
+        Source: -2
+        Sink: -1
+        Total source capacity: 2502.0
+        Total sink capacity: 24807.0
+    ------------------------
+
+================================================================================
+--- Performance Summary ---
+================================================================================
+  1. Best flow found (across all runs):   2502.000000
+  2. Mean of best flows found:             2502.000000
+  3. Standard deviation of best flows:     0.000000
+  4. Mean iterations to find best solution:548.70
+  5. Mean evaluations to find best solution:549.70
+  6. Success Rate (reaching optimum):      100.0% (10/10)
+  Mean execution time per run:             1065.1177 seconds
+  Total execution time for 10 runs:    1096.3960 seconds
+
+================================================================================
+--- Detailed Run-by-Run Statistics ---
+================================================================================
+ Run  Best Flow  Iterations to Best  Evaluations to Best  Execution Time (s)  Is Optimal
+   1     2502.0                 546                  547         1061.422046        True
+   2     2502.0                 547                  548         1059.783987        True
+   3     2502.0                 555                  556         1081.763160        True
+   4     2502.0                 542                  543         1047.158406        True
+   5     2502.0                 537                  538         1043.999126        True
+   6     2502.0                 550                  551         1066.117318        True
+   7     2502.0                 550                  551         1065.948435        True
+   8     2502.0                 555                  556         1078.785990        True
+   9     2502.0                 543                  544         1055.290171        True
+  10     2502.0                 562                  563         1090.908247        True
+
+================================================================================
+--- Generating Plots (Style: light) ---
+================================================================================
+  -> Saved all runs convergence plot to: data/results/network_7200/convergence_all_runs_network_7200.png
+  -> Saved best run convergence plot to: data/results/network_7200/convergence_best_run_network_7200.png
+
+--- Experiment for network_7200 Complete ---
